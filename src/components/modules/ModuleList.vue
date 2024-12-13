@@ -16,10 +16,17 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <router-link class="nav-link" to="/" exact-active-class="active">Accueil</router-link>
+            <router-link class="nav-link" to="/" exact-active-class="active"
+              >Accueil</router-link
+            >
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/modules" exact-active-class="active">Modules</router-link>
+            <router-link
+              class="nav-link"
+              to="/modules"
+              exact-active-class="active"
+              >Modules</router-link
+            >
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#">Apprenants</a>
@@ -36,7 +43,9 @@
     <h1 class="text-center mb-4">Liste des Modules</h1>
 
     <div class="text-end mb-3">
-      <button class="btn btn-success" @click="openAddModal">Ajouter un Module</button>
+      <button class="btn btn-success" @click="openAddModal">
+        Ajouter un Module
+      </button>
     </div>
 
     <table class="table table-hover table-bordered">
@@ -56,13 +65,22 @@
           <td>{{ module.duration }}</td>
           <td>{{ module.price }} €</td>
           <td>
-            <button class="btn btn-outline-primary me-2" @click="viewModule(module)">
+            <button
+              class="btn btn-outline-primary me-2"
+              @click="viewModule(module)"
+            >
               <i class="fas fa-eye"></i>
             </button>
-            <button class="btn btn-outline-warning me-2" @click="openEditModal(module)">
+            <button
+              class="btn btn-outline-warning me-2"
+              @click="openEditModal(module)"
+            >
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-outline-danger" @click="deleteModule(module.id)">
+            <button
+              class="btn btn-outline-danger"
+              @click="deleteModule(module.id)"
+            >
               <i class="fas fa-trash"></i>
             </button>
           </td>
@@ -74,46 +92,38 @@
       Aucun module disponible.
     </div>
 
-    <div v-if="showModal" class="modal show d-block" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ isEdit ? "Modifier le Module" : "Ajouter un Module" }}</h5>
-            <button type="button" class="btn-close" @click="closeModal"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="saveModule">
-              <div class="mb-3">
-                <label for="moduleName" class="form-label">Nom</label>
-                <input type="text" id="moduleName" v-model="currentModule.name" class="form-control" required />
-              </div>
-              <div class="mb-3">
-                <label for="moduleDuration" class="form-label">Durée</label>
-                <input type="text" id="moduleDuration" v-model="currentModule.duration" class="form-control" required />
-              </div>
-              <div class="mb-3">
-                <label for="modulePrice" class="form-label">Prix</label>
-                <input type="number" id="modulePrice" v-model="currentModule.price" class="form-control" required />
-              </div>
-              <button type="submit" class="btn btn-primary">{{ isEdit ? "Modifier" : "Ajouter" }}</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ModuleForm
+      v-if="showModal"
+      :isEdit="isEdit"
+      :currentModule="currentModule"
+      :isVisible="showModal"
+      @saveModule="saveModule"
+      @closeModal="closeModal"
+    />
+
+    <ModuleView
+      v-if="viewingModule"
+      :module="viewingModule"
+      :isVisible="viewingModule !== null"
+      @closeView="closeView"
+    />
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue';
-import { useModuleStore } from '../../stores/moduleStore';
+import { reactive, ref, onMounted } from "vue";
+import { useModuleStore } from "../../stores/moduleStore";
+import ModuleForm from "./ModuleForm.vue";
+import ModuleView from "./ModuleView.vue";
 
 const moduleStore = useModuleStore();
-const { modules, fetchModules, createModule, updateModule, deleteModule } = moduleStore;
+const { modules, fetchModules, createModule, updateModule, deleteModule } =
+  moduleStore;
 
 const showModal = ref(false);
 const isEdit = ref(false);
-const currentModule = reactive({ id: null, name: '', duration: '', price: '' });
+const currentModule = reactive({ id: null, name: "", duration: "", price: "" });
+const viewingModule = ref(null);
 
 const openAddModal = () => {
   resetCurrentModule();
@@ -127,33 +137,37 @@ const openEditModal = (module) => {
   showModal.value = true;
 };
 
+const viewModule = (module) => {
+  viewingModule.value = module;
+};
+
+const closeView = () => {
+  viewingModule.value = null;
+};
+
 const closeModal = () => {
   showModal.value = false;
 };
 
-const saveModule = async () => {
+const saveModule = async (module) => {
   if (isEdit.value) {
-    await updateModule(currentModule.id, currentModule);
+    await updateModule(module.id, module);
   } else {
-    await createModule(currentModule);
+    await createModule(module);
   }
   closeModal();
 };
 
 const resetCurrentModule = () => {
   currentModule.id = null;
-  currentModule.name = '';
-  currentModule.duration = '';
-  currentModule.price = '';
+  currentModule.name = "";
+  currentModule.duration = "";
+  currentModule.price = "";
 };
 
 onMounted(() => {
   fetchModules();
 });
-
-const viewModule = (module) => {
-  console.log('Voir le module :', module);
-};
 </script>
 
 <style scoped>
