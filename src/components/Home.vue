@@ -23,7 +23,12 @@
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Modules</a>
+              <router-link
+                class="nav-link"
+                to="/modules"
+                exact-active-class="active"
+                >Modules</router-link
+              >
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#">Apprenants</a>
