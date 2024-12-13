@@ -51,7 +51,6 @@
     <table class="table table-hover table-bordered">
       <thead>
         <tr>
-          <th scope="col">#</th>
           <th scope="col">Nom</th>
           <th scope="col">Durée</th>
           <th scope="col">Prix</th>
@@ -59,8 +58,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(module, index) in modules" :key="module.id">
-          <th scope="row">{{ index + 1 }}</th>
+        <tr v-for="(module) in modules" :key="module.id">
           <td>{{ module.name }}</td>
           <td>{{ module.duration }}</td>
           <td>{{ module.price }} €</td>
@@ -79,7 +77,7 @@
             </button>
             <button
               class="btn btn-outline-danger"
-              @click="deleteModule(module.id)"
+              @click="confirmDelete(module.id)"
             >
               <i class="fas fa-trash"></i>
             </button>
@@ -115,6 +113,7 @@ import { reactive, ref, onMounted } from "vue";
 import { useModuleStore } from "../../stores/moduleStore";
 import ModuleForm from "./ModuleForm.vue";
 import ModuleView from "./ModuleView.vue";
+import Swal from "sweetalert2";
 
 const moduleStore = useModuleStore();
 const { modules, fetchModules, createModule, updateModule, deleteModule } =
@@ -150,12 +149,21 @@ const closeModal = () => {
 };
 
 const saveModule = async (module) => {
+  // Fermer le modal immédiatement
+  closeModal();
+
+  // Effectuer l'ajout ou la modification après la fermeture du modal
   if (isEdit.value) {
     await updateModule(module.id, module);
+    // Mettre à jour la liste localement après modification
+    const index = modules.findIndex((m) => m.id === module.id);
+    if (index !== -1) {
+      modules[index] = module;
+    }
   } else {
-    await createModule(module);
+    const newModule = await createModule(module);
+    modules.push(newModule); // Ajouter le module à la liste localement
   }
-  closeModal();
 };
 
 const resetCurrentModule = () => {
@@ -163,6 +171,33 @@ const resetCurrentModule = () => {
   currentModule.name = "";
   currentModule.duration = "";
   currentModule.price = "";
+};
+
+// Fonction de confirmation pour supprimer un module avec SweetAlert
+const confirmDelete = (moduleId) => {
+  Swal.fire({
+    title: "Êtes-vous sûr?",
+    text: "Vous ne pourrez pas revenir en arrière après avoir supprimé ce module!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Oui, supprimer!",
+    cancelButtonText: "Annuler",
+    reverseButtons: true,
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      await deleteModule(moduleId);
+      Swal.fire(
+        "Supprimé!",
+        "Le module a été supprimé avec succès.",
+        "success"
+      );
+      // Mettre à jour la liste après la suppression
+      const index = modules.findIndex((m) => m.id === moduleId);
+      if (index !== -1) {
+        modules.splice(index, 1);
+      }
+    }
+  });
 };
 
 onMounted(() => {

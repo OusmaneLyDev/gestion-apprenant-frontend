@@ -10,7 +10,7 @@ export const useModuleStore = defineStore("module", {
     // Récupérer tous les modules
     async fetchModules() {
       try {
-        const response = await axios.get("http://localhost:3010/api");
+        const response = await axios.get("http://localhost:3010/api/modules");
         this.modules = response.data; // Assurez-vous que la réponse correspond à votre API
       } catch (error) {
         console.error("Erreur lors de la récupération des modules :", error);
