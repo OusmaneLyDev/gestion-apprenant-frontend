@@ -37,28 +37,28 @@ export const useRegistrationStore = defineStore("registration", {
       }
     },
 
-    // Mettre à jour une inscription existante
     async updateRegistration(id, updatedRegistration) {
-      try {
-        const response = await axios.put(
-          `http://localhost:3010/api/registration/${id}`,
-          updatedRegistration
-        );
-        const index = this.registrations.findIndex(
-          (registration) => registration.id === id
-        );
-        if (index !== -1) {
-          this.registrations[index] = response.data; // Mettre à jour l'inscription dans la liste
+        try {
+          const response = await axios.put(
+            `http://localhost:3010/api/registration/${id}`,
+            updatedRegistration
+          );
+          console.log("Réponse API:", response.data); // Pour vérifier la réponse
+          const index = this.registrations.findIndex(
+            (registration) => registration.id === id
+          );
+          if (index !== -1) {
+            this.registrations[index] = response.data; // Mettre à jour l'inscription dans la liste
+          }
+        } catch (error) {
+          console.error(
+            "Erreur lors de la mise à jour de l'inscription :",
+            error
+          );
+          throw error;
         }
-      } catch (error) {
-        console.error(
-          "Erreur lors de la mise à jour de l'inscription :",
-          error
-        );
-        throw error;
-      }
-    },
-
+      },
+      
     // Supprimer une inscription
     async deleteRegistration(id) {
       try {

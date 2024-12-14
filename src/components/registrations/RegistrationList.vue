@@ -79,23 +79,18 @@
           <td>{{ formatDate(registration.endDate) }}</td>
           <td>{{ registration.amount }} €</td>
           <td>
-            <!-- Bouton Modifier -->
             <button
               class="btn btn-outline-warning me-2"
               @click="openEditModal(registration)"
             >
               <i class="fas fa-edit"></i>
             </button>
-
-            <!-- Bouton Voir -->
             <button
               class="btn btn-outline-info me-2"
               @click="openViewModal(registration)"
             >
               <i class="fas fa-eye"></i>
             </button>
-
-            <!-- Bouton Supprimer -->
             <button
               class="btn btn-outline-danger"
               @click="confirmDelete(registration.id)"
@@ -125,7 +120,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="registrationFormModalLabel">
-              {{ " Ajouter une Inscription " }}
+              {{ "Modifier l'Inscription" }}
             </h5>
             <button
               type="button"
@@ -294,7 +289,7 @@ const { modules, fetchModules } = moduleStore;
 const { students, fetchStudents } = studentStore;
 
 const showModal = ref(false);
-const showDetailsModal = ref(false); // Modal pour afficher les détails
+const showDetailsModal = ref(false);
 const isEdit = ref(false);
 const currentRegistration = reactive({
   id: null,
@@ -304,7 +299,7 @@ const currentRegistration = reactive({
   startDate: "",
   endDate: "",
   amount: 0,
-  studentName: "", // Ajout de studentName et moduleName pour l'affichage dans le modal
+  studentName: "",
   moduleName: "",
 });
 
@@ -333,6 +328,8 @@ const openEditModal = (registration) => {
   currentRegistration.startDate = registration.startDate;
   currentRegistration.endDate = registration.endDate;
   currentRegistration.amount = registration.amount;
+  currentRegistration.studentName = getStudentName(registration.studentId);
+  currentRegistration.moduleName = registration.module.name;
   isEdit.value = true;
   showModal.value = true;
 };
@@ -358,9 +355,18 @@ const closeDetailsModal = () => {
   showDetailsModal.value = false;
 };
 
+const getStudentName = (studentId) => {
+  const student = students.find((student) => student.id === studentId);
+  return student ? student.fullName : "";
+};
+
 const saveRegistration = async () => {
   if (isEdit.value) {
-    await updateRegistration(currentRegistration);
+    if (!currentRegistration.id) {
+      console.error("L'ID de l'inscription est manquant !");
+      return;
+    }
+    await updateRegistration(currentRegistration.id, currentRegistration);
   } else {
     await createRegistration(currentRegistration);
   }
@@ -370,28 +376,22 @@ const saveRegistration = async () => {
 const confirmDelete = (id) => {
   Swal.fire({
     title: "Êtes-vous sûr ?",
-    text: "Cette inscription sera définitivement supprimée !",
+    text: "Cette inscription sera définitivement supprimée.",
     icon: "warning",
     showCancelButton: true,
-    confirmButtonText: "Oui, Supprimer",
+    confirmButtonText: "Oui, supprimer",
     cancelButtonText: "Annuler",
   }).then(async (result) => {
     if (result.isConfirmed) {
       await deleteRegistration(id);
-      Swal.fire("Supprimé !", "L'inscription a été supprimée.", "success");
     }
   });
 };
 
-const getStudentName = (studentId) => {
-  const student = students.find((student) => student.id === studentId);
-  return student ? student.fullName : "";
-};
-
-onMounted(() => {
-  fetchRegistrations();
-  fetchModules();
-  fetchStudents();
+onMounted(async () => {
+  await fetchRegistrations();
+  await fetchModules();
+  await fetchStudents();
 });
 </script>
 
