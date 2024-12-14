@@ -49,7 +49,7 @@
     </div>
   </header>
 
-  <div class="module-list container mt-5">
+  <div class="container mt-5">
     <h1 class="text-center mb-4">Liste des Modules</h1>
 
     <div class="text-end mb-3">
@@ -58,8 +58,8 @@
       </button>
     </div>
 
-    <table class="table table-hover table-bordered">
-      <thead>
+    <table class="table table-striped table-bordered mt-4">
+      <thead class="table-dark">
         <tr>
           <th scope="col">Nom</th>
           <th scope="col">Durée</th>
@@ -68,10 +68,10 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="module in modules" :key="module.id">
+        <tr v-for="module in moduleStore.modules" :key="module.id">
           <td>{{ module.name }}</td>
           <td>{{ module.duration }}</td>
-          <td>{{ module.price }} €</td>
+          <td>{{ module.price }} Mru</td>
           <td>
             <button
               class="btn btn-outline-primary me-2"
