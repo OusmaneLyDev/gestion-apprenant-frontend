@@ -31,7 +31,12 @@
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Apprenants</a>
+              <router-link
+                class="nav-link"
+                to="/students"
+                exact-active-class="active"
+                >Students</router-link
+              >
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#">Contact</a>
