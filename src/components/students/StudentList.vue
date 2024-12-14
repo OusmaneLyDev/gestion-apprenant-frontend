@@ -50,7 +50,11 @@
   </header>
   <div class="container mt-5">
     <h1 class="text-center">Liste des étudiants</h1>
-
+    <div class="text-end mb-3">
+      <button class="btn btn-success" @click="openModal('add')">
+      Ajouter un étudiant
+    </button>
+    </div>
     <div v-if="studentStore.loading" class="alert alert-info">
       Chargement...
     </div>
@@ -76,31 +80,28 @@
           <td>{{ student.address }}</td>
           <td>
             <button
-              class="btn btn-primary btn-sm"
+              class="btn btn-outline-primary me-2"
               @click="showDetails(student)"
             >
-              Détails
+            <i class="fas fa-eye"></i>
             </button>
             <button
-              class="btn btn-warning btn-sm"
+              class="btn btn-outline-warning me-2"
               @click="openModal('update', student)"
             >
-              Modifier
+            <i class="fas fa-edit"></i>
             </button>
             <button
-              class="btn btn-danger btn-sm"
+              class="btn btn-outline-danger"
               @click="confirmDelete(student.id)"
             >
-              Supprimer
+            <i class="fas fa-trash"></i>
             </button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <button class="btn btn-success" @click="openModal('add')">
-      Ajouter un étudiant
-    </button>
 
     <!-- Modal pour Ajouter/Mise à jour -->
     <div

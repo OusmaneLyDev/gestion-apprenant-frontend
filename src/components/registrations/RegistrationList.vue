@@ -58,8 +58,8 @@
       </button>
     </div>
 
-    <table class="table table-hover table-bordered">
-      <thead>
+    <table class="table table-striped table-bordered mt-4">
+      <thead class="table-dark">
         <tr>
           <th scope="col">Nom de l'Apprenant</th>
           <th scope="col">Module</th>
