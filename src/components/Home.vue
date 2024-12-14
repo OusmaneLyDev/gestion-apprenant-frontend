@@ -31,10 +31,20 @@
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Apprenants</a>
+              <router-link
+                class="nav-link"
+                to="/students"
+                exact-active-class="active"
+                >Apprenents</router-link
+              >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Contact</a>
+              <router-link
+                class="nav-link"
+                to="/registrations"
+                exact-active-class="active"
+                >Inscription</router-link
+              >
             </li>
           </ul>
         </div>

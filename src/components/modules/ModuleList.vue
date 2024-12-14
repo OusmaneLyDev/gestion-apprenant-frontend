@@ -29,10 +29,20 @@
             >
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Apprenants</a>
+            <router-link
+              class="nav-link"
+              to="/students"
+              exact-active-class="active"
+              >Apprenents</router-link
+            >
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Contact</a>
+            <router-link
+              class="nav-link"
+              to="/registrations"
+              exact-active-class="active"
+              >Inscriptions</router-link
+            >
           </li>
         </ul>
       </div>
@@ -58,7 +68,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(module) in modules" :key="module.id">
+        <tr v-for="module in modules" :key="module.id">
           <td>{{ module.name }}</td>
           <td>{{ module.duration }}</td>
           <td>{{ module.price }} €</td>
@@ -90,29 +100,110 @@
       Aucun module disponible.
     </div>
 
-    <ModuleForm
+    <div
+      class="modal fade"
+      :class="{ show: showModal }"
+      tabindex="-1"
+      aria-labelledby="moduleFormModalLabel"
+      aria-hidden="true"
+      style="display: block"
       v-if="showModal"
-      :isEdit="isEdit"
-      :currentModule="currentModule"
-      :isVisible="showModal"
-      @saveModule="saveModule"
-      @closeModal="closeModal"
-    />
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="moduleFormModalLabel">
+              {{ isEdit ? "Modifier le Module" : "Ajouter un Module" }}
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              @click="closeModal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="saveModule">
+              <div class="mb-3">
+                <label for="moduleName" class="form-label">Nom</label>
+                <input
+                  type="text"
+                  id="moduleName"
+                  v-model="currentModule.name"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="moduleDuration" class="form-label">Durée</label>
+                <input
+                  type="text"
+                  id="moduleDuration"
+                  v-model="currentModule.duration"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="modulePrice" class="form-label">Prix</label>
+                <input
+                  type="number"
+                  id="modulePrice"
+                  v-model="currentModule.price"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                {{ isEdit ? "Modifier" : "Ajouter" }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <ModuleView
+    <div
+      class="modal fade"
+      :class="{ show: viewingModule !== null }"
+      tabindex="-1"
+      aria-labelledby="moduleViewModalLabel"
+      aria-hidden="true"
+      style="display: block"
       v-if="viewingModule"
-      :module="viewingModule"
-      :isVisible="viewingModule !== null"
-      @closeView="closeView"
-    />
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="moduleViewModalLabel">
+              Détails du Module
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              @click="closeView"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <h5>Nom : {{ viewingModule.name }}</h5>
+            <p><strong>Durée:</strong> {{ viewingModule.duration }}</p>
+            <p><strong>Prix:</strong> {{ viewingModule.price }} €</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeView">
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, onMounted } from "vue";
 import { useModuleStore } from "../../stores/moduleStore";
-import ModuleForm from "./ModuleForm.vue";
-import ModuleView from "./ModuleView.vue";
 import Swal from "sweetalert2";
 
 const moduleStore = useModuleStore();
@@ -148,21 +239,34 @@ const closeModal = () => {
   showModal.value = false;
 };
 
-const saveModule = async (module) => {
-  // Fermer le modal immédiatement
+const saveModule = async () => {
+  // Fermer la modal
   closeModal();
 
-  // Effectuer l'ajout ou la modification après la fermeture du modal
+  // Valider la durée
+  const dateTest = new Date(currentModule.duration);
+  if (isNaN(dateTest.getTime())) {
+    // Si la date n'est pas valide, essayer de la reformater
+    const reformattedDate = new Date(
+      currentModule.duration.split("/").reverse().join("-")
+    );
+    if (isNaN(reformattedDate.getTime())) {
+      Swal.fire("Erreur", "Le format de la durée est invalide.", "error");
+      return;
+    }
+    currentModule.duration = reformattedDate.toISOString().split("T")[0]; // Convertir en format ISO
+  }
+
+  // Appel backend
   if (isEdit.value) {
-    await updateModule(module.id, module);
-    // Mettre à jour la liste localement après modification
-    const index = modules.findIndex((m) => m.id === module.id);
+    await updateModule(currentModule.id, currentModule);
+    const index = modules.findIndex((m) => m.id === currentModule.id);
     if (index !== -1) {
-      modules[index] = module;
+      modules[index] = { ...currentModule };
     }
   } else {
-    const newModule = await createModule(module);
-    modules.push(newModule); // Ajouter le module à la liste localement
+    const newModule = await createModule(currentModule);
+    modules.push(newModule);
   }
 };
 
@@ -173,7 +277,6 @@ const resetCurrentModule = () => {
   currentModule.price = "";
 };
 
-// Fonction de confirmation pour supprimer un module avec SweetAlert
 const confirmDelete = (moduleId) => {
   Swal.fire({
     title: "Êtes-vous sûr?",
@@ -191,7 +294,6 @@ const confirmDelete = (moduleId) => {
         "Le module a été supprimé avec succès.",
         "success"
       );
-      // Mettre à jour la liste après la suppression
       const index = modules.findIndex((m) => m.id === moduleId);
       if (index !== -1) {
         modules.splice(index, 1);
