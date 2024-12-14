@@ -35,7 +35,7 @@
                 class="nav-link"
                 to="/students"
                 exact-active-class="active"
-                >Apprenents</router-link
+                >Students</router-link
               >
             </li>
             <li class="nav-item">
