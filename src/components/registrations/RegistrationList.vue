@@ -44,6 +44,14 @@
               >Inscriptions</router-link
             >
           </li>
+          <li class="nav-item">
+              <router-link
+                class="nav-link"
+                to="/payments"
+                exact-active-class="active"
+                >Payements</router-link
+              >
+            </li>
         </ul>
       </div>
     </div>
@@ -63,6 +71,8 @@
         <tr>
           <th scope="col">Nom de l'Apprenant</th>
           <th scope="col">Module</th>
+          <th scope="col">Durée (jours)</th>
+          <!-- Added duration column -->
           <th scope="col">Date d'Inscription</th>
           <th scope="col">Date de Début</th>
           <th scope="col">Date de Fin</th>
@@ -74,7 +84,9 @@
         <tr v-for="registration in registrations" :key="registration.id">
           <td>{{ getStudentName(registration.studentId) }}</td>
           <td>{{ registration.module.name }}</td>
-          <td>{{ formatDate(registration.registrationDate) }}</td>
+          <td>{{ registration.module.duration }} jours</td>
+          <!-- Display module duration -->
+          <td>{{ formatDate(registration.dateRegister) }}</td>
           <td>{{ formatDate(registration.startDate) }}</td>
           <td>{{ formatDate(registration.endDate) }}</td>
           <td>{{ registration.amount }} €</td>
@@ -209,6 +221,18 @@
                   required
                 />
               </div>
+              <div class="mb-3">
+                <label for="moduleDuration" class="form-label"
+                  >Durée du Module (jours)</label
+                >
+                <input
+                  type="number"
+                  id="moduleDuration"
+                  v-model="currentRegistration.moduleDuration"
+                  class="form-control"
+                  required
+                />
+              </div>
               <button type="submit" class="btn btn-primary">
                 {{ isEdit ? "Modifier" : "Ajouter" }}
               </button>
@@ -299,67 +323,19 @@ const currentRegistration = reactive({
   startDate: "",
   endDate: "",
   amount: 0,
+  moduleDuration: 0, // Adding moduleDuration here
   studentName: "",
   moduleName: "",
 });
 
-const formatDate = (date) => {
-  const d = new Date(date);
-  return d.toLocaleDateString("fr-FR");
-};
+// Fetch data when component is mounted
+onMounted(() => {
+  fetchRegistrations();
+  fetchModules();
+  fetchStudents();
+});
 
-const openAddModal = () => {
-  currentRegistration.id = null;
-  currentRegistration.studentId = null;
-  currentRegistration.moduleId = null;
-  currentRegistration.registrationDate = "";
-  currentRegistration.startDate = "";
-  currentRegistration.endDate = "";
-  currentRegistration.amount = 0;
-  isEdit.value = false;
-  showModal.value = true;
-};
-
-const openEditModal = (registration) => {
-  currentRegistration.id = registration.id;
-  currentRegistration.studentId = registration.studentId;
-  currentRegistration.moduleId = registration.moduleId;
-  currentRegistration.registrationDate = registration.registrationDate;
-  currentRegistration.startDate = registration.startDate;
-  currentRegistration.endDate = registration.endDate;
-  currentRegistration.amount = registration.amount;
-  currentRegistration.studentName = getStudentName(registration.studentId);
-  currentRegistration.moduleName = registration.module.name;
-  isEdit.value = true;
-  showModal.value = true;
-};
-
-const openViewModal = (registration) => {
-  currentRegistration.id = registration.id;
-  currentRegistration.studentId = registration.studentId;
-  currentRegistration.moduleId = registration.moduleId;
-  currentRegistration.registrationDate = registration.registrationDate;
-  currentRegistration.startDate = registration.startDate;
-  currentRegistration.endDate = registration.endDate;
-  currentRegistration.amount = registration.amount;
-  currentRegistration.studentName = getStudentName(registration.studentId);
-  currentRegistration.moduleName = registration.module.name;
-  showDetailsModal.value = true;
-};
-
-const closeModal = () => {
-  showModal.value = false;
-};
-
-const closeDetailsModal = () => {
-  showDetailsModal.value = false;
-};
-
-const getStudentName = (studentId) => {
-  const student = students.find((student) => student.id === studentId);
-  return student ? student.fullName : "";
-};
-
+// Save the registration (add/edit)
 const saveRegistration = async () => {
   if (isEdit.value) {
     if (!currentRegistration.id) {
@@ -368,31 +344,84 @@ const saveRegistration = async () => {
     }
     await updateRegistration(currentRegistration.id, currentRegistration);
   } else {
+    // Add moduleDuration in case of new registration
+    currentRegistration.moduleDuration = modules.find(
+      (module) => module.id === currentRegistration.moduleId
+    )?.duration;
     await createRegistration(currentRegistration);
   }
   closeModal();
 };
 
-const confirmDelete = (id) => {
-  Swal.fire({
+// Open the modal for adding registration
+const openAddModal = () => {
+  isEdit.value = false;
+  currentRegistration.id = null;
+  currentRegistration.studentId = null;
+  currentRegistration.moduleId = null;
+  currentRegistration.registrationDate = "";
+  currentRegistration.startDate = "";
+  currentRegistration.endDate = "";
+  currentRegistration.amount = 0;
+  currentRegistration.moduleDuration = 0;
+  showModal.value = true;
+};
+
+// Open the modal for editing registration
+const openEditModal = (registration) => {
+  isEdit.value = true;
+  currentRegistration.id = registration.id;
+  currentRegistration.studentId = registration.studentId;
+  currentRegistration.moduleId = registration.moduleId;
+  currentRegistration.registrationDate = registration.registrationDate;
+  currentRegistration.startDate = registration.startDate;
+  currentRegistration.endDate = registration.endDate;
+  currentRegistration.amount = registration.amount;
+  currentRegistration.moduleDuration = registration.module.duration; // Set duration
+  showModal.value = true;
+};
+
+// Close the modal
+const closeModal = () => {
+  showModal.value = false;
+};
+
+// Format date
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString("fr-FR");
+};
+
+// Confirm deletion
+const confirmDelete = async (registrationId) => {
+  const result = await Swal.fire({
     title: "Êtes-vous sûr ?",
-    text: "Cette inscription sera définitivement supprimée.",
+    text: "Cette inscription sera supprimée définitivement.",
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Oui, supprimer",
     cancelButtonText: "Annuler",
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      await deleteRegistration(id);
-    }
   });
+  if (result.isConfirmed) {
+    await deleteRegistration(registrationId);
+  }
 };
 
-onMounted(async () => {
-  await fetchRegistrations();
-  await fetchModules();
-  await fetchStudents();
-});
+// Open details modal
+const openViewModal = (registration) => {
+  currentRegistration.studentName = getStudentName(registration.studentId);
+  currentRegistration.moduleName = registration.module.name;
+  currentRegistration.registrationDate = registration.dateRegister;
+  currentRegistration.startDate = registration.startDate;
+  currentRegistration.endDate = registration.endDate;
+  currentRegistration.amount = registration.amount;
+  showDetailsModal.value = true;
+};
+
+// Get student name by ID
+const getStudentName = (studentId) => {
+  const student = students.find((s) => s.id === studentId);
+  return student ? student.fullName : "Inconnu";
+};
 </script>
 
 <style scoped>

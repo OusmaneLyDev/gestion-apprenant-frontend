@@ -33,7 +33,7 @@
               class="nav-link"
               to="/students"
               exact-active-class="active"
-              >Apprenents</router-link
+              >Apprenants</router-link
             >
           </li>
           <li class="nav-item">
@@ -44,58 +44,56 @@
               >Inscriptions</router-link
             >
           </li>
-          <li class="nav-item">
-              <router-link
-                class="nav-link"
-                to="/payments"
-                exact-active-class="active"
-                >Payements</router-link
-              >
-            </li>
         </ul>
       </div>
     </div>
   </header>
 
   <div class="container mt-5">
-    <h1 class="text-center mb-4">Liste des Modules</h1>
+    <h1 class="text-center mb-4">Liste des Paiements</h1>
 
     <div class="text-end mb-3">
       <button class="btn btn-success" @click="openAddModal">
-        Ajouter un Module
+        Ajouter un Paiement
       </button>
     </div>
 
     <table class="table table-striped table-bordered mt-4">
       <thead class="table-dark">
         <tr>
-          <th scope="col">Nom</th>
-          <th scope="col">Durée (jours)</th>
-          <th scope="col">Prix</th>
+          <th scope="col">Payeur</th>
+          <th scope="col">Module</th>
+          <th scope="col">Montant</th>
+          <th scope="col">Mode de Paiement</th>
+          <th scope="col">Date de payement</th>
+          <th scope="col">Tel du payeur</th>
           <th scope="col">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="module in moduleStore.modules" :key="module.id">
-          <td>{{ module.name }}</td>
-          <td>{{ module.duration }}</td>
-          <td>{{ module.price }} Mru</td>
+        <tr v-for="payment in paymentStore.payments" :key="payment.id">
+          <td>{{ payment.payer }}</td>
+          <td>{{ getModuleName(payment.moduleId) }}</td>
+          <td>{{ payment.amount }} Mru</td>
+          <td>{{ payment.paymentMode }}</td>
+          <td>{{ payment.paymentDate }}</td>
+          <td>{{ payment.payerNumber }}</td>
           <td>
             <button
               class="btn btn-outline-primary me-2"
-              @click="viewModule(module)"
+              @click="viewPayment(payment)"
             >
               <i class="fas fa-eye"></i>
             </button>
             <button
               class="btn btn-outline-warning me-2"
-              @click="openEditModal(module)"
+              @click="openEditModal(payment)"
             >
               <i class="fas fa-edit"></i>
             </button>
             <button
               class="btn btn-outline-danger"
-              @click="confirmDelete(module.id)"
+              @click="confirmDelete(payment.id)"
             >
               <i class="fas fa-trash"></i>
             </button>
@@ -104,24 +102,26 @@
       </tbody>
     </table>
 
-    <div v-if="modules.length === 0" class="text-center text-muted">
-      Aucun module disponible.
+    <div
+      v-if="paymentStore.payments.length === 0"
+      class="text-center text-muted"
+    >
+      Aucun paiement disponible.
     </div>
 
+    <!-- Modal Add/Edit Payment -->
     <div
-      class="modal fade"
-      :class="{ show: showModal }"
-      tabindex="-1"
-      aria-labelledby="moduleFormModalLabel"
-      aria-hidden="true"
-      style="display: block"
       v-if="showModal"
+      class="modal fade show"
+      tabindex="-1"
+      aria-labelledby="paymentFormModalLabel"
+      aria-hidden="true"
     >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="moduleFormModalLabel">
-              {{ isEdit ? "Modifier le Module" : "Ajouter un Module" }}
+            <h5 class="modal-title" id="paymentFormModalLabel">
+              {{ isEdit ? "Modifier le Paiement" : "Ajouter un Paiement" }}
             </h5>
             <button
               type="button"
@@ -131,33 +131,45 @@
             ></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="saveModule">
+            <form @submit.prevent="savePayment">
               <div class="mb-3">
-                <label for="moduleName" class="form-label">Nom</label>
+                <label for="payerName" class="form-label">Nom du Payeur</label>
                 <input
                   type="text"
-                  id="moduleName"
-                  v-model="currentModule.name"
+                  id="payerName"
+                  v-model="currentPayment.payer"
                   class="form-control"
                   required
                 />
               </div>
               <div class="mb-3">
-                <label for="moduleDuration" class="form-label">Durée</label>
+                <label for="moduleId" class="form-label">Module</label>
                 <input
                   type="text"
-                  id="moduleDuration"
-                  v-model="currentModule.duration"
+                  id="moduleId"
+                  v-model="currentPayment.moduleId"
                   class="form-control"
                   required
                 />
               </div>
               <div class="mb-3">
-                <label for="modulePrice" class="form-label">Prix</label>
+                <label for="paymentAmount" class="form-label">Montant</label>
                 <input
                   type="number"
-                  id="modulePrice"
-                  v-model="currentModule.price"
+                  id="paymentAmount"
+                  v-model="currentPayment.amount"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="paymentMode" class="form-label"
+                  >Mode de Paiement</label
+                >
+                <input
+                  type="text"
+                  id="paymentMode"
+                  v-model="currentPayment.paymentMode"
                   class="form-control"
                   required
                 />
@@ -171,20 +183,19 @@
       </div>
     </div>
 
+    <!-- View Payment Modal -->
     <div
-      class="modal fade"
-      :class="{ show: viewingModule !== null }"
+      v-if="viewingPayment"
+      class="modal fade show"
       tabindex="-1"
-      aria-labelledby="moduleViewModalLabel"
+      aria-labelledby="paymentViewModalLabel"
       aria-hidden="true"
-      style="display: block"
-      v-if="viewingModule"
     >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="moduleViewModalLabel">
-              Détails du Module
+            <h5 class="modal-title" id="paymentViewModalLabel">
+              Détails du Paiement
             </h5>
             <button
               type="button"
@@ -194,9 +205,13 @@
             ></button>
           </div>
           <div class="modal-body">
-            <h5>Nom : {{ viewingModule.name }}</h5>
-            <p><strong>Durée:</strong> {{ viewingModule.duration }}</p>
-            <p><strong>Prix:</strong> {{ viewingModule.price }} €</p>
+            <p><strong>Nom du Payeur:</strong> {{ viewingPayment.payer }}</p>
+            <p><strong>Module ID:</strong> {{ viewingPayment.moduleId }}</p>
+            <p><strong>Montant:</strong> {{ viewingPayment.amount }} Mru</p>
+            <p>
+              <strong>Mode de Paiement:</strong>
+              {{ viewingPayment.paymentMode }}
+            </p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeView">
@@ -211,84 +226,87 @@
 
 <script setup>
 import { reactive, ref, onMounted } from "vue";
-import { useModuleStore } from "../../stores/moduleStore";
+import { usePaymentStore } from "../../stores/paymentStore";
 import Swal from "sweetalert2";
+import { useModuleStore } from "../../stores/moduleStore";
 
+const paymentStore = usePaymentStore();
 const moduleStore = useModuleStore();
-const { modules, fetchModules, createModule, updateModule, deleteModule } =
-  moduleStore;
+
+const { payments, fetchPayments, createPayment, updatePayment, deletePayment } =
+  paymentStore;
 
 const showModal = ref(false);
 const isEdit = ref(false);
-const currentModule = reactive({ id: null, name: "", duration: "", price: "" });
-const viewingModule = ref(null);
+const currentPayment = reactive({
+  id: null,
+  payer: "",
+  moduleId: "",
+  amount: "",
+  paymentMode: "",
+});
+const viewingPayment = ref(null);
 
 const openAddModal = () => {
-  resetCurrentModule();
+  resetCurrentPayment();
   isEdit.value = false;
   showModal.value = true;
 };
 
-const openEditModal = (module) => {
-  Object.assign(currentModule, module);
+const { modules } = moduleStore; // Nous avons déjà une liste des modules dans le store
+
+// Récupère le nom du module en utilisant l'ID du module
+const getModuleName = (moduleId) => {
+  const module = modules.find(m => m.id === moduleId);
+  return module ? module.name : "Module non trouvé"; // Si aucun module n'est trouvé, on retourne un message d'erreur
+};
+
+
+const openEditModal = (payment) => {
+  Object.assign(currentPayment, payment);
   isEdit.value = true;
   showModal.value = true;
 };
 
-const viewModule = (module) => {
-  viewingModule.value = module;
+const viewPayment = (payment) => {
+  viewingPayment.value = payment;
 };
 
 const closeView = () => {
-  viewingModule.value = null;
+  viewingPayment.value = null;
 };
 
 const closeModal = () => {
   showModal.value = false;
 };
 
-const saveModule = async () => {
-  // Fermer la modal
+const savePayment = async () => {
   closeModal();
 
-  // Valider la durée
-  const dateTest = new Date(currentModule.duration);
-  if (isNaN(dateTest.getTime())) {
-    // Si la date n'est pas valide, essayer de la reformater
-    const reformattedDate = new Date(
-      currentModule.duration.split("/").reverse().join("-")
-    );
-    if (isNaN(reformattedDate.getTime())) {
-      Swal.fire("Erreur", "Le format de la durée est invalide.", "error");
-      return;
-    }
-    currentModule.duration = reformattedDate.toISOString().split("T")[0]; // Convertir en format ISO
-  }
-
-  // Appel backend
   if (isEdit.value) {
-    await updateModule(currentModule.id, currentModule);
-    const index = modules.findIndex((m) => m.id === currentModule.id);
+    await updatePayment(currentPayment.id, currentPayment);
+    const index = payments.findIndex((p) => p.id === currentPayment.id);
     if (index !== -1) {
-      modules[index] = { ...currentModule };
+      payments[index] = { ...currentPayment };
     }
   } else {
-    const newModule = await createModule(currentModule);
-    modules.push(newModule);
+    const newPayment = await createPayment(currentPayment);
+    payments.push(newPayment);
   }
 };
 
-const resetCurrentModule = () => {
-  currentModule.id = null;
-  currentModule.name = "";
-  currentModule.duration = "";
-  currentModule.price = "";
+const resetCurrentPayment = () => {
+  currentPayment.id = null;
+  currentPayment.payer = "";
+  currentPayment.moduleId = "";
+  currentPayment.amount = "";
+  currentPayment.paymentMode = "";
 };
 
-const confirmDelete = (moduleId) => {
+const confirmDelete = (paymentId) => {
   Swal.fire({
     title: "Êtes-vous sûr?",
-    text: "Vous ne pourrez pas revenir en arrière après avoir supprimé ce module!",
+    text: "Vous ne pourrez pas revenir en arrière après avoir supprimé ce paiement!",
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Oui, supprimer!",
@@ -296,23 +314,27 @@ const confirmDelete = (moduleId) => {
     reverseButtons: true,
   }).then(async (result) => {
     if (result.isConfirmed) {
-      await deleteModule(moduleId);
+      await deletePayment(paymentId);
       Swal.fire(
         "Supprimé!",
-        "Le module a été supprimé avec succès.",
+        "Le paiement a été supprimé avec succès.",
         "success"
       );
-      const index = modules.findIndex((m) => m.id === moduleId);
+      const index = payments.findIndex((p) => p.id === paymentId);
       if (index !== -1) {
-        modules.splice(index, 1);
+        payments.splice(index, 1);
       }
     }
   });
 };
 
+// Vérifiez les paiements et les modules dans votre composant
 onMounted(() => {
-  fetchModules();
+  paymentStore.fetchPayments();
+  moduleStore.fetchModules();
+
 });
+
 </script>
 
 <style scoped>

@@ -44,6 +44,14 @@
               >Inscriptions</router-link
             >
           </li>
+          <li class="nav-item">
+              <router-link
+                class="nav-link"
+                to="/payments"
+                exact-active-class="active"
+                >Payements</router-link
+              >
+            </li>
         </ul>
       </div>
     </div>
