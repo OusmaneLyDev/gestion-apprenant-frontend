@@ -197,6 +197,51 @@
         </div>
       </div>
     </div>
+<!-- Modal pour afficher les détails -->
+<div
+  v-if="showDetailsModal"
+  class="modal fade show d-block"
+  id="detailsModal"
+  tabindex="-1"
+  aria-labelledby="detailsModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailsModalLabel">
+          Détails de l'étudiant
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          @click="closeDetailsModal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Nom complet :</strong> {{ studentDetails.fullName }}</p>
+        <p><strong>Email :</strong> {{ studentDetails.email }}</p>
+        <p><strong>Téléphone :</strong> {{ studentDetails.phoneNumber }}</p>
+        <p><strong>Adresse :</strong> {{ studentDetails.address }}</p>
+        <p><strong>Tuteur :</strong> {{ studentDetails.tutor }}</p>
+        <p>
+          <strong>Statut :</strong>
+          {{ studentDetails.status ? "Actif" : "Inactif" }}
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          @click="closeDetailsModal"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- Modal de confirmation pour suppression -->
     <div
@@ -289,6 +334,17 @@ const openModal = (mode, student = null) => {
 // Fermer le modal
 const closeModal = () => {
   showModal.value = false;
+};
+const showDetailsModal = ref(false);
+const studentDetails = ref({});
+
+const showDetails = (student) => {
+  studentDetails.value = { ...student };
+  showDetailsModal.value = true;
+};
+
+const closeDetailsModal = () => {
+  showDetailsModal.value = false;
 };
 
 // Ajouter ou mettre à jour un étudiant
