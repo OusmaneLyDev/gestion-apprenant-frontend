@@ -74,3 +74,5 @@ src/
 
 
 ## Auteur
+
+[Ethman Ly](https://github.com/OusmaneLyDev).
