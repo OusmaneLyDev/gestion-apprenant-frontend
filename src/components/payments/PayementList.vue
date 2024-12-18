@@ -1,54 +1,4 @@
 <template>
-  <header class="header navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Gestion Apprenants</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <router-link class="nav-link" to="/" exact-active-class="active"
-              >Accueil</router-link
-            >
-          </li>
-          <li class="nav-item">
-            <router-link
-              class="nav-link"
-              to="/modules"
-              exact-active-class="active"
-              >Modules</router-link
-            >
-          </li>
-          <li class="nav-item">
-            <router-link
-              class="nav-link"
-              to="/students"
-              exact-active-class="active"
-              >Apprenants</router-link
-            >
-          </li>
-          <li class="nav-item">
-            <router-link
-              class="nav-link"
-              to="/registrations"
-              exact-active-class="active"
-              >Inscriptions</router-link
-            >
-          </li>
-        </ul>
-      </div>
-    </div>
-  </header>
-
   <div class="container mt-5">
     <h1 class="text-center mb-4">Liste des Paiements</h1>
 
@@ -102,17 +52,10 @@
       </tbody>
     </table>
 
-    <div
-      v-if="paymentStore.payments.length === 0"
-      class="text-center text-muted"
-    >
-      Aucun paiement disponible.
-    </div>
-
     <!-- Modal Add/Edit Payment -->
     <div
       v-if="showModal"
-      class="modal fade show"
+      class="modal fade show d-block"
       tabindex="-1"
       aria-labelledby="paymentFormModalLabel"
       aria-hidden="true"
@@ -143,14 +86,43 @@
                 />
               </div>
               <div class="mb-3">
+                <label for="studentId" class="form-label">Sélectionner un Étudiant</label>
+                <select
+                  id="studentId"
+                  v-model="currentPayment.studentId"
+                  class="form-control"
+                  required
+                >
+                  <option v-for="student in paymentStore.students" :key="student.id" :value="student.id">
+                    {{ student.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="mb-3">
                 <label for="moduleId" class="form-label">Module</label>
-                <input
-                  type="text"
+                <select
                   id="moduleId"
                   v-model="currentPayment.moduleId"
                   class="form-control"
                   required
-                />
+                >
+                  <option v-for="module in paymentStore.modules" :key="module.id" :value="module.id">
+                    {{ module.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="registrationId" class="form-label">Inscriptions</label>
+                <select
+                  id="registrationId"
+                  v-model="currentPayment.registrationId"
+                  class="form-control"
+                  required
+                >
+                  <option v-for="registration in paymentStore.registrations" :key="registration.id" :value="registration.id">
+                    {{ registration.name }}
+                  </option>
+                </select>
               </div>
               <div class="mb-3">
                 <label for="paymentAmount" class="form-label">Montant</label>
@@ -163,9 +135,7 @@
                 />
               </div>
               <div class="mb-3">
-                <label for="paymentMode" class="form-label"
-                  >Mode de Paiement</label
-                >
+                <label for="paymentMode" class="form-label">Mode de Paiement</label>
                 <input
                   type="text"
                   id="paymentMode"
@@ -182,47 +152,9 @@
         </div>
       </div>
     </div>
-
-    <!-- View Payment Modal -->
-    <div
-      v-if="viewingPayment"
-      class="modal fade show"
-      tabindex="-1"
-      aria-labelledby="paymentViewModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="paymentViewModalLabel">
-              Détails du Paiement
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              @click="closeView"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <p><strong>Nom du Payeur:</strong> {{ viewingPayment.payer }}</p>
-            <p><strong>Module ID:</strong> {{ viewingPayment.moduleId }}</p>
-            <p><strong>Montant:</strong> {{ viewingPayment.amount }} Mru</p>
-            <p>
-              <strong>Mode de Paiement:</strong>
-              {{ viewingPayment.paymentMode }}
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeView">
-              Fermer
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
+
 
 <script setup>
 import { reactive, ref, onMounted } from "vue";
